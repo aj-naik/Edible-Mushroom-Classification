@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import plot_confusion_matrix, plot_roc_curve, plot_precision_recall_curve
@@ -53,7 +55,7 @@ def main():
     x_train, x_test, y_train, y_test = split(df)
 
     st.sidebar.subheader("Choose Classifier")
-    classifier = st.sidebar.selectbox("Classifier", ("Support Vector Machine (SVM)", "Logistic Regression", "Random Forest"))
+    classifier = st.sidebar.selectbox("Classifier", ("Support Vector Machine (SVM)", "Logistic Regression", "K Nearest Neighbor (KNN)","Decision Tree", "Random Forest"))
 
     if classifier == 'Support Vector Machine (SVM)':
         st.sidebar.subheader("Model Hyperparameters")
@@ -85,6 +87,40 @@ def main():
         if st.sidebar.button("Classify", key='classify'):
             st.subheader("Logistic Regression Results")
             model = LogisticRegression(C=C, penalty='l2', max_iter=max_iter)
+            model.fit(x_train, y_train)
+            accuracy = model.score(x_test, y_test)
+            y_pred = model.predict(x_test)
+            st.write("Accuracy: ", accuracy.round(2))
+            st.write("Precision: ", precision_score(y_test, y_pred, labels=class_names).round(2))
+            st.write("Recall: ", recall_score(y_test, y_pred, labels=class_names).round(2))
+            plot_metrics(metrics)
+
+    if classifier == 'K Nearest Neighbor (KNN)':
+        st.sidebar.subheader("Model Hyperparameters")
+        neigh = st.sidebar.number_input("No. of Neighbours")
+        algo = st.sidebar.radio("Algorithm", ('auto', 'ball_tree', 'kd_tree', 'brute'), key='algo')
+
+        metrics = st.sidebar.multiselect("What metrics to plot?", ('Confusion Matrix', 'ROC Curve', 'Precision-Recall Curve'))
+
+        if st.sidebar.button("Classify", key='classify'):
+            st.subheader("Logistic Regression Results")
+            model = KNeighborsClassifier(n_neighbors = int(neigh), algorithm=algo)
+            model.fit(x_train, y_train)
+            accuracy = model.score(x_test, y_test)
+            y_pred = model.predict(x_test)
+            st.write("Accuracy: ", accuracy.round(2))
+            st.write("Precision: ", precision_score(y_test, y_pred, labels=class_names).round(2))
+            st.write("Recall: ", recall_score(y_test, y_pred, labels=class_names).round(2))
+            plot_metrics(metrics)
+
+    if classifier == 'Decision Tree':
+        st.sidebar.subheader("Model Hyperparameters")
+        max_depth = st.sidebar.number_input("The maximum depth of the tree", 1, 30, step=1, key='n_estimators')
+        metrics = st.sidebar.multiselect("What metrics to plot?", ('Confusion Matrix', 'ROC Curve', 'Precision-Recall Curve'))
+
+        if st.sidebar.button("Classify", key='classify'):
+            st.subheader("Random Forest Results")
+            model = DecisionTreeClassifier(max_depth=max_depth)
             model.fit(x_train, y_train)
             accuracy = model.score(x_test, y_test)
             y_pred = model.predict(x_test)
